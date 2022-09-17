@@ -28,9 +28,8 @@ NPC를 twerk에서 받은 유저이름의 스킨을딴 NPC를 만들어
 그 NPC를 아머스탠드에 탑승시킵니다   
 
 
-그리고 여기서 앉기만 하면 그저 앉아있기만 하여   
-자세를 숙일수가 없게 됩니다   
-그래서 NPC의 상태를 겉날개로 나는 상태를 만듭니다   
+그리고 앉기만 하면 당연히 자세를 숙일수가 없게 됩니다   
+그러니 숙일수가 있게 NPC의 상태를 겉날개로 나는 상태를 만듭니다   
 그렇게 하면 NPC의 시선에 따라서 위 이미지처럼 움직이게 됩니다   
 ![Npc Rotating Image](https://i.imgur.com/qmvJmyU.gif)   
 자세한것은 [여기서](https://www.spigotmc.org/threads/packet-discovery-rotating-player-models.318388/#post-3024113) 참조 하십시는걸 추천드립니다
