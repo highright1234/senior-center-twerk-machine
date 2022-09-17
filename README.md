@@ -1,11 +1,16 @@
 # senior-center-twerk-machine
-경로당 트월킹 머신
+## 모드를 쓰지 않은 프로젝트입니다
+## 설명
+경로당 트월킹 머신   
+그냥 할거없어서 만든 작은 Toy project 입니다
 
 ## 사용법
-`/t[werk] <owner of skin>`
+`/t[werk] <owner of skin>`   
+현재 개발자가 귀찮음으로 인해
+리로드가 아니면 NPC를 삭제할수 없다는점...
 
 ![사진](images/image.gif)
-
+---
 ## 작동원리
 
 tap관련 설명은 제외하였습니다. 자세한건 [Monun Docs](https://monun.me/dev/tap/fake-entity)에서 확인해주세요   
