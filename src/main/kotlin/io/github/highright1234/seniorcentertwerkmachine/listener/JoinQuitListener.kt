@@ -8,12 +8,7 @@ import org.bukkit.event.player.PlayerQuitEvent
 
 object JoinQuitListener : Listener {
     @EventHandler
-    fun PlayerJoinEvent.on() {
-        SeniorCenterTwerkMachine.fakeServer.addPlayer(player)
-    }
-
+    fun PlayerJoinEvent.on() = SeniorCenterTwerkMachine.fakeServer.addPlayer(player)
     @EventHandler
-    fun PlayerQuitEvent.on() {
-        SeniorCenterTwerkMachine.fakeServer.removePlayer(player)
-    }
+    fun PlayerQuitEvent.on() = SeniorCenterTwerkMachine.fakeServer.removePlayer(player)
 }
