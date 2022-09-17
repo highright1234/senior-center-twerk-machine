@@ -67,12 +67,12 @@ object NpcKommand {
 
     private fun FakeEntity<Player>.twerk() = SeniorCenterTwerkMachine.plugin.launch {
         while (valid) {
-            for (i in -20..20 step 10) {
+            for (i in -20..10 step 10) {
                 newPitch(i)
                 delay(1)
             }
             delay(100)
-            for (i in 20 downTo -20 step 5) {
+            for (i in 10 downTo -20 step 5) {
                 newPitch(i)
                 delay(1)
             }
