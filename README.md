@@ -26,9 +26,14 @@ NPC를 twerk에서 받은 유저이름으로 스킨을 가져와서 만들어
 그리고 여기서 앉기만 하면 그저 앉아있기만 하여   
 자세를 숙일수가 없게 됩니다   
 그래서 NPC의 상태를 겉날개로 나는 상태를 만듭니다   
-그리고 NPC의 시선에 따라서 위 이미지처럼 움직이게 됩니다   
+그렇게 하여 NPC의 시선에 따라서 위 이미지처럼 움직이게 됩니다   
 ![Npc Rotating Image](https://i.imgur.com/qmvJmyU.gif)   
 자세한것은 [여기서](https://www.spigotmc.org/threads/packet-discovery-rotating-player-models.318388/#post-3024113) 참조 하십시는걸 추천드립니다
+
+
+혹시나 따라만들사람~~없겠지만~~~이 있다면 알려드려야 될것이 있다면
+Tap상에서는 Passenger 상태에서는 바라보는 시점을 바꾸는것을 FakeEntity 내에서 하는것
+많은 시도를 해봤지만 결국 안되는것 같아 패킷으로 처리하였습니다
 
 
 그렇게 하여 NPC는 앉아있는 상태임과 동시에   
