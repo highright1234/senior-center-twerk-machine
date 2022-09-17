@@ -1,6 +1,7 @@
 # senior-center-twerk-machine
 경로당 트월킹 머신
 
+## 사용법
 `/t[werk] <owner of skin>`
 
 ![사진](images/image.gif)
