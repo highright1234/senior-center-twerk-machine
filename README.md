@@ -3,3 +3,5 @@
 
 /twerk <owner of skin>
 alias: t
+
+![사진](images/image.gif)
