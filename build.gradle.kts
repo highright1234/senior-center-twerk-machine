@@ -32,8 +32,8 @@ dependencies {
     monunLibrary("tap", Versions.TAP)
     monunLibrary("invfx", Versions.INVFX)
     monunLibrary("kommand", Versions.KOMMAND)
-    bukkitLibrary("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:${Versions.MC_COROUTINE}")
-    bukkitLibrary("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:${Versions.MC_COROUTINE}")
+    library("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:${Versions.MC_COROUTINE}")
+    library("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:${Versions.MC_COROUTINE}")
     library("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINE}")
     compileOnly("io.papermc.paper:paper-api:${project.bukkit.apiVersion}-R0.1-SNAPSHOT")
     library(kotlin("stdlib-jdk8"))
@@ -61,9 +61,6 @@ bukkit {
     main = "${project.group}.$directoryName.$pluginName"
     website = "http://www.github.com/highright1234/${project.name}"
     author = "HighRight"
-    (libraries ?: listOf()).plus(monunLibraries).also {
-        libraries = it
-    }
 }
 
 tasks.register<Jar>("pluginsUpdate") {
