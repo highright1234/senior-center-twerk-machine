@@ -11,7 +11,6 @@ import io.github.monun.tap.fake.setLocation
 import io.github.monun.tap.mojangapi.MojangAPI
 import io.github.monun.tap.protocol.PacketSupport
 import io.github.monun.tap.protocol.sendPacket
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import net.kyori.adventure.text.Component.text
@@ -19,7 +18,6 @@ import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Bukkit
 import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.Player
-import java.util.concurrent.ExecutionException
 
 object NpcKommand {
 
@@ -51,7 +49,7 @@ object NpcKommand {
                     ).apply {
                         updateMetadata {
                             isGliding = true
-                            isCollidable = false
+                            isCollidable = false // 충돌 방진데 작동 안함 ㅋㅋ 망할
                         }
                         armorStand.addPassenger(this)
                     } // 아머스탠드에 앉히며 겉날개로 나는 모션 생성
@@ -104,23 +102,20 @@ object NpcKommand {
 
     private suspend fun profileOf(name: String): MojangAPI.SkinProfile? {
 
-        profileCacheOf(name).onSuccess { return it }
+        profileCacheOf(name).onSuccess { return it } // 캐쉬에서 가져오기
 
         var profile : MojangAPI.SkinProfile? = null
         val job = SeniorCenterTwerkMachine.plugin.launch(
             SeniorCenterTwerkMachine.plugin.asyncDispatcher
         ) {
-            try {
-                MojangAPI.fetchProfile(name)
-                    ?.uuid()
-                    ?.let(MojangAPI::fetchSkinProfile)
-                    .also { profile = it }
-            } catch (_: ExecutionException) {
-            }
+            MojangAPI.fetchProfile(name) // uuid 가져오기
+                ?.uuid()
+                ?.let(MojangAPI::fetchSkinProfile) // MojangAPI 로 스킨 가져오기
+                .also { profile = it }
             cache[name] = profile
             profileImporter -= name
         }
-        profileImporter[name] = job
+        profileImporter[name] = job // 캐쉬로 다른 코드에서 가져올때 멈추는 용도
         job.join()
         delayRemoveCache(name)
         return profile
@@ -135,6 +130,7 @@ object NpcKommand {
         return Result.success(cache[name])
     }
 
+    // 캐쉬 제거기 / 캐쉬 제거 딜레이
     private suspend fun delayRemoveCache(name: String) {
         SeniorCenterTwerkMachine.plugin.launch {
             delay(TwerkingConfig.cacheRemovingDelay)
