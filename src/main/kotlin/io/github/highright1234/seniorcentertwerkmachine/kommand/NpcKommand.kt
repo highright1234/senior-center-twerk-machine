@@ -10,8 +10,8 @@ import io.github.monun.tap.fake.setLocation
 import io.github.monun.tap.mojangapi.MojangAPI
 import io.github.monun.tap.protocol.PacketSupport
 import io.github.monun.tap.protocol.sendPacket
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 import net.kyori.adventure.text.Component.text
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Bukkit
@@ -20,11 +20,14 @@ import org.bukkit.entity.Player
 import java.util.concurrent.ExecutionException
 
 object NpcKommand {
+
     fun register(pluginKommand: PluginKommand) {
         pluginKommand.register("twerk", "t") {
             requires { isPlayer }
             then("npc-name" to string()) {
                 suspendExecutes { kommandContext ->
+
+                    val location = player.location.clone()
 
                     player.sendMessage(text("Creating twerk machine").color(NamedTextColor.GREEN))
 
@@ -35,12 +38,12 @@ object NpcKommand {
                     }
 
                     val armorStand = SeniorCenterTwerkMachine.fakeServer.spawnEntity(
-                        player.location.clone().apply { y -= 0.4 },
+                        location.apply { y -= 0.4 },
                         ArmorStand::class.java
                     ).apply { updateMetadata { isInvisible = true } } // 투명으로 아머스탠스 생성
 
                     val npc = SeniorCenterTwerkMachine.fakeServer.spawnPlayer(
-                        player.location,
+                        location,
                         npcName,
                         profile.profileProperties().toSet()
                     ).apply {
@@ -93,15 +96,34 @@ object NpcKommand {
 
     }
 
+    private val profileImporter : MutableMap<String, Job> = mutableMapOf()
+    private val cache : MutableMap<String, MojangAPI.SkinProfile> = mutableMapOf()
+    private val cacheRemover : MutableMap<String, Job> = mutableMapOf()
+
     private suspend fun profileOf(name: String): MojangAPI.SkinProfile? {
+        profileImporter[name]?.join()
+        cache[name]?.let { return it }
         var profile : MojangAPI.SkinProfile? = null
-        withContext(SeniorCenterTwerkMachine.plugin.asyncDispatcher) {
+        profileImporter[name] = SeniorCenterTwerkMachine.plugin.launch(
+            SeniorCenterTwerkMachine.plugin.asyncDispatcher
+        ) {
             try {
                 MojangAPI.fetchProfile(name)
                     ?.uuid()
                     ?.let(MojangAPI::fetchSkinProfile)
                     .also { profile = it }
             } catch (_: ExecutionException) {
+            }
+            profile?.let { cache[name] = it }
+        }
+        profile?.let {
+            SeniorCenterTwerkMachine.plugin.launch {
+                delay(60000)
+                cache -= name
+                cacheRemover -= name
+            }.let {
+                cacheRemover[name]?.cancel()
+                cacheRemover[name] = it
             }
         }
         return profile
