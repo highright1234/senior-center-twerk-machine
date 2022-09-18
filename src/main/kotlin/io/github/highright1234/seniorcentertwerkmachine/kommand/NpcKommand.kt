@@ -11,6 +11,7 @@ import io.github.monun.tap.fake.setLocation
 import io.github.monun.tap.mojangapi.MojangAPI
 import io.github.monun.tap.protocol.PacketSupport
 import io.github.monun.tap.protocol.sendPacket
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import net.kyori.adventure.text.Component.text
@@ -98,14 +99,15 @@ object NpcKommand {
     }
 
     private val profileImporter : MutableMap<String, Job> = mutableMapOf()
-    private val cache : MutableMap<String, MojangAPI.SkinProfile> = mutableMapOf()
+    private val cache : MutableMap<String, MojangAPI.SkinProfile?> = mutableMapOf()
     private val cacheRemover : MutableMap<String, Job> = mutableMapOf()
 
     private suspend fun profileOf(name: String): MojangAPI.SkinProfile? {
-        profileImporter[name]?.join()
-        cache[name]?.let { return it }
+
+        profileCacheOf(name).onSuccess { return it }
+
         var profile : MojangAPI.SkinProfile? = null
-        profileImporter[name] = SeniorCenterTwerkMachine.plugin.launch(
+        val job = SeniorCenterTwerkMachine.plugin.launch(
             SeniorCenterTwerkMachine.plugin.asyncDispatcher
         ) {
             try {
@@ -115,20 +117,32 @@ object NpcKommand {
                     .also { profile = it }
             } catch (_: ExecutionException) {
             }
-            profile?.let { cache[name] = it }
+            cache[name] = profile
             profileImporter -= name
         }
-        profileImporter[name]!!.join()
-        profile?.let {
-            SeniorCenterTwerkMachine.plugin.launch {
-                delay(TwerkingConfig.cacheRemovingDelay)
-                cache -= name
-                cacheRemover -= name
-            }.let {
-                cacheRemover[name]?.cancel()
-                cacheRemover[name] = it
-            }
-        }
+        profileImporter[name] = job
+        job.join()
+        delayRemoveCache(name)
         return profile
+
+    }
+
+    private suspend fun profileCacheOf(name: String) : Result<MojangAPI.SkinProfile?> {
+        if (name !in cache) {
+            profileImporter[name]?.join() ?: return Result.failure(IllegalStateException("Not found importer"))
+        }
+        delayRemoveCache(name)
+        return Result.success(cache[name])
+    }
+
+    private suspend fun delayRemoveCache(name: String) {
+        SeniorCenterTwerkMachine.plugin.launch {
+            delay(TwerkingConfig.cacheRemovingDelay)
+            cache -= name
+            cacheRemover -= name
+        }.let {
+            cacheRemover[name]?.cancel()
+            cacheRemover[name] = it
+        }
     }
 }
