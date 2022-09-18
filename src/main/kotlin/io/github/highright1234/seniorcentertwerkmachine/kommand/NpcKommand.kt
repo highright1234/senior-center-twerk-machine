@@ -3,6 +3,7 @@ package io.github.highright1234.seniorcentertwerkmachine.kommand
 import com.github.shynixn.mccoroutine.bukkit.asyncDispatcher
 import com.github.shynixn.mccoroutine.bukkit.launch
 import io.github.highright1234.seniorcentertwerkmachine.SeniorCenterTwerkMachine
+import io.github.highright1234.seniorcentertwerkmachine.config.TwerkingConfig
 import io.github.highright1234.seniorcentertwerkmachine.suspendExecutes
 import io.github.monun.kommand.PluginKommand
 import io.github.monun.tap.fake.FakeEntity
@@ -38,7 +39,7 @@ object NpcKommand {
                     }
 
                     val armorStand = SeniorCenterTwerkMachine.fakeServer.spawnEntity(
-                        location.apply { y -= 0.4 },
+                        location.apply { y += TwerkingConfig.deltaY },
                         ArmorStand::class.java
                     ).apply { updateMetadata { isInvisible = true } } // 투명으로 아머스탠스 생성
 
@@ -70,12 +71,12 @@ object NpcKommand {
 
     private fun FakeEntity<Player>.twerk() = SeniorCenterTwerkMachine.plugin.launch {
         while (valid) {
-            for (i in -20..10 step 10) {
+            for (i in TwerkingConfig.pitchUpRange) {
                 newPitch(i)
                 delay(1)
             }
-            delay(100)
-            for (i in 10 downTo -20 step 5) {
+            delay(TwerkingConfig.delayBetweenPositionChanging)
+            for (i in TwerkingConfig.pitchDownRange) {
                 newPitch(i)
                 delay(1)
             }
@@ -115,10 +116,12 @@ object NpcKommand {
             } catch (_: ExecutionException) {
             }
             profile?.let { cache[name] = it }
+            profileImporter -= name
         }
+        profileImporter[name]!!.join()
         profile?.let {
             SeniorCenterTwerkMachine.plugin.launch {
-                delay(60000)
+                delay(TwerkingConfig.cacheRemovingDelay)
                 cache -= name
                 cacheRemover -= name
             }.let {
