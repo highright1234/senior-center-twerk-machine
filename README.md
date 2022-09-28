@@ -5,8 +5,11 @@
 
 ## 사용법
 `/t[werk] <owner of skin>`   
-현재 개발자가 귀찮음으로 인해
-리로드가 아니면 NPC를 삭제할수 없다는점...
+쉬프트 우클릭을 이용해 gui를 열어   
+이름 수정, 스킨 수정, 삭제가 가능합니다   
+
+권한 설정은 귀찮아서 안넣었으니   
+풀리퀘 넣으면 해드릴게유
 
 ![사진](images/image.gif)
 ---
@@ -33,12 +36,6 @@ NPC를 twerk에서 받은 유저이름의 스킨을딴 NPC를 만들어
 ![Npc Rotating Image](https://i.imgur.com/qmvJmyU.gif)   
 자세한것은 [여기서](https://www.spigotmc.org/threads/packet-discovery-rotating-player-models.318388/#post-3024113) 참조 하십시는걸 추천드립니다
 
-
-혹시나 따라만들사람~~없겠지만~~이 있다면 알려드려야 될것이 있다면   
-Tap상에서는 Passenger 상태에서는 바라보는 시점을 바꾸는것을 FakeEntity 내에서 하는것   
-많은 시도를 해봤지만 결국 안되는것 같아 패킷으로 처리하였습니다   
-
-
 그렇게 하여 NPC는 앉아있는 상태임과 동시에   
 시선에 따라서 몸을 회전할수있는 상태가 됩니다   
 어케 찾았냐고요? ~~몰라요 그냥 놀다가 찾았어요~~
@@ -51,7 +48,7 @@ Tap상에서는 Passenger 상태에서는 바라보는 시점을 바꾸는것을
 ## Used Libraries
 > Coroutine   
 > [MCCoroutine](https://github.com/Shynixn/MCCoroutine)   
-> [Komamnd](https://github.com/monun/kommand)   
+> [Kommand](https://github.com/monun/kommand)   
 > [InvFX](https://github.com/monun/invfx)   
 > [Tap](https://github.com/monun/tap)   
 

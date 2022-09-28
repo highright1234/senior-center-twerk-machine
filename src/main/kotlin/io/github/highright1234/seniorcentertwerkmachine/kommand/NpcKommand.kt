@@ -21,12 +21,12 @@ object NpcKommand {
                         player.sendMessage(
                             text()
                                 .append(text("npc "))
-                                .append(npc.bukkitEntity.displayName())
+                                .append(npc.fakePlayer.bukkitEntity.displayName())
                                 .append(text(" is successfully created"))
                                 .color(NamedTextColor.GREEN)
                         )
                     }.onFailure {
-                        player.sendMessage(text("Unknown player"))
+                        player.sendMessage(text("Unknown player").color(NamedTextColor.RED))
                     }
                 }
             }

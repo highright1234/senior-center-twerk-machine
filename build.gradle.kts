@@ -21,7 +21,7 @@ fun DependencyHandlerScope.monunLibrary(name: String, version: String) {
 bukkit.apiVersion = "1.19.2"
 
 group = "io.github.highright1234"
-version = "0.0.1"
+version = "0.0.2"
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")

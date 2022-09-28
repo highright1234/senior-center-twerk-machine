@@ -33,4 +33,7 @@ object TwerkingConfig {
 
     @Config
     var cacheRemovingDelay = 60000L
+
+    @Config
+    var guiTimeOutDelay = 60000L
 }

@@ -6,7 +6,9 @@ import com.github.shynixn.mccoroutine.bukkit.registerSuspendingEvents
 import io.github.highright1234.seniorcentertwerkmachine.config.NpcDataConfig
 import io.github.highright1234.seniorcentertwerkmachine.config.TwerkingConfig
 import io.github.highright1234.seniorcentertwerkmachine.kommand.NpcKommand
+import io.github.highright1234.seniorcentertwerkmachine.listener.InteractListener
 import io.github.highright1234.seniorcentertwerkmachine.listener.JoinQuitListener
+import io.github.highright1234.seniorcentertwerkmachine.util.ListeningPlayer
 import io.github.monun.kommand.KommandContext
 import io.github.monun.kommand.KommandSource
 import io.github.monun.kommand.kommand
@@ -16,22 +18,27 @@ import kotlinx.coroutines.delay
 import org.bukkit.configuration.serialization.ConfigurationSerialization
 import java.io.File
 
+
 class SeniorCenterTwerkMachine : SuspendingJavaPlugin() {
+
     companion object {
         lateinit var plugin: SeniorCenterTwerkMachine
         lateinit var fakeServer: FakeEntityServer
     }
+
     override suspend fun onEnableAsync() {
         plugin = this
-        ConfigurationSerialization.registerClass(NpcDataConfig.NpcInformation::class.java)
+        fakeServer = FakeEntityServer.create(this)
+        ConfigurationSerialization.registerClass(TwerkingMachine::class.java)
+        ListeningPlayer.activate()
         TwerkingConfig.load(File(dataFolder, "config.yml"))
         NpcDataConfig.load(File(dataFolder, "npc-data.yml"))
-        fakeServer = FakeEntityServer.create(this)
         repeatingFakeUpdate()
         kommand {
             NpcKommand.register(this)
         }
         server.pluginManager.registerSuspendingEvents(JoinQuitListener, this)
+        server.pluginManager.registerSuspendingEvents(InteractListener, this)
         server.onlinePlayers.forEach(fakeServer::addPlayer)
     }
 

@@ -2,11 +2,13 @@ package io.github.highright1234.seniorcentertwerkmachine.util
 
 import com.github.shynixn.mccoroutine.bukkit.asyncDispatcher
 import com.github.shynixn.mccoroutine.bukkit.launch
-import io.github.highright1234.seniorcentertwerkmachine.SeniorCenterTwerkMachine
+import io.github.highright1234.seniorcentertwerkmachine.SeniorCenterTwerkMachine.Companion.fakeServer
+import io.github.highright1234.seniorcentertwerkmachine.SeniorCenterTwerkMachine.Companion.plugin
+import io.github.highright1234.seniorcentertwerkmachine.TwerkingMachine
 import io.github.highright1234.seniorcentertwerkmachine.config.NpcDataConfig
 import io.github.highright1234.seniorcentertwerkmachine.config.TwerkingConfig
 import io.github.monun.tap.fake.FakeEntity
-import io.github.monun.tap.fake.setLocation
+import io.github.monun.tap.fake.PlayerInfoAction
 import io.github.monun.tap.mojangapi.MojangAPI
 import io.github.monun.tap.protocol.PacketSupport
 import io.github.monun.tap.protocol.sendPacket
@@ -16,27 +18,33 @@ import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.Player
-import java.util.UUID
+import org.bukkit.util.BoundingBox
+import org.bukkit.util.Vector
+import java.util.*
 
 object NpcUtil {
+
     suspend fun createNpc(
         name: String,
         location: Location,
         uuid: UUID? = null,
-        skin: MojangAPI.SkinProfile? = null
-    ) : Result<FakeEntity<Player>> {
+        skin: MojangAPI.SkinProfile? = null,
+        deltaY: Double = TwerkingConfig.deltaY
+    ) : Result<TwerkingMachine> {
 
         val profile = skin ?: profileOf(name) ?: run {
             return Result.failure(Exception("Not found profile of player"))
         }
 
-        val armorStand = SeniorCenterTwerkMachine.fakeServer.spawnEntity(
-            location.apply { y += TwerkingConfig.deltaY },
+        val spawnLocation = location.clone().apply { y += deltaY }
+
+        val armorStand = fakeServer.spawnEntity(
+            spawnLocation,
             ArmorStand::class.java
         ).apply { updateMetadata { isInvisible = true } } // 투명으로 아머스탠스 생성
 
-        val npc = SeniorCenterTwerkMachine.fakeServer.spawnPlayer(
-            location,
+        val npc = fakeServer.spawnPlayer(
+            spawnLocation,
             name,
             profile.profileProperties().toSet(),
             uniqueId = uuid ?: UUID.randomUUID()
@@ -48,38 +56,37 @@ object NpcUtil {
             armorStand.addPassenger(this)
         } // 아머스탠드에 앉히며 겉날개로 나는 모션 생성
 
-        npc.twerk()
+        plugin.launch {
+            delay(500)
+            Bukkit.getOnlinePlayers().forEach {
+                it.sendPacket(PacketSupport.playerInfoAction(PlayerInfoAction.REMOVE, npc.bukkitEntity))
+            }
+        }
 
-        NpcDataConfig.npcData += NpcDataConfig.NpcInformation.fromNpc(npc, profile)
-        return Result.success(npc)
+        npc.twerk()
+        val machine = TwerkingMachine(npc, profile)
+        NpcDataConfig.npcData += machine
+        return Result.success(machine)
     }
 
-    private fun FakeEntity<Player>.twerk() = SeniorCenterTwerkMachine.plugin.launch {
+    private fun FakeEntity<Player>.twerk() = plugin.launch {
         while (valid) {
             for (i in TwerkingConfig.pitchUpRange) {
-                newPitch(i)
+                pitch = i
                 delay(1)
             }
             delay(TwerkingConfig.delayBetweenPositionChanging)
             for (i in TwerkingConfig.pitchDownRange) {
-                newPitch(i)
+                pitch = i
                 delay(1)
             }
         }
     }
 
-    private fun FakeEntity<Player>.newPitch(newPitch: Int) {
-
-        val newLocation = location.clone()
-            .apply { pitch = newPitch.toFloat() }
-            .also { bukkitEntity.setLocation(it) }
-
-        Bukkit.getOnlinePlayers().forEach { player ->
-            player.sendPacket(
-                PacketSupport.entityTeleport(bukkitEntity, newLocation)
-            )
-        }
-
+    private var FakeEntity<Player>.pitch : Int
+    get() = location.pitch.toInt()
+    set(value) {
+        rotate(location.yaw, value.toFloat())
     }
 
     private val profileImporter : MutableMap<String, Job> = mutableMapOf()
@@ -91,8 +98,8 @@ object NpcUtil {
         profileCacheOf(name).onSuccess { return it } // 캐쉬에서 가져오기
 
         var profile : MojangAPI.SkinProfile? = null
-        val job = SeniorCenterTwerkMachine.plugin.launch(
-            SeniorCenterTwerkMachine.plugin.asyncDispatcher
+        val job = plugin.launch(
+            plugin.asyncDispatcher
         ) {
             MojangAPI.fetchProfile(name) // uuid 가져오기
                 ?.uuid()
@@ -118,7 +125,7 @@ object NpcUtil {
 
     // 캐쉬 제거기 / 캐쉬 제거 딜레이
     private suspend fun delayRemoveCache(name: String) {
-        SeniorCenterTwerkMachine.plugin.launch {
+        plugin.launch(plugin.asyncDispatcher) {
             delay(TwerkingConfig.cacheRemovingDelay)
             cache -= name
             cacheRemover -= name
@@ -126,5 +133,53 @@ object NpcUtil {
             cacheRemover[name]?.cancel()
             cacheRemover[name] = it
         }
+    }
+
+    private fun getNearbyEntities(location: Location, maxDistance: Double = 10.0): List<TwerkingMachine> {
+        return NpcDataConfig.npcData
+            .filter { it.fakePlayer.location.world == location.world }
+            .filter { it.fakePlayer.location.distance(location) < maxDistance }
+    }
+
+    fun raytraceMachines(
+        start: Location, direction: Vector, maxDistance: Double = 3.0, raySize: Double = 0.5
+    ) : TwerkingMachine? {
+        require(start.world != null) { "Location's world can't be null" }
+        start.checkFinite()
+
+        direction.checkFinite()
+
+        require(direction.lengthSquared() > 0) { "Direction's magnitude is 0!" }
+
+        if (maxDistance < 0.0) return null
+
+        val startPos: Vector = start.toVector()
+        val entities: Collection<TwerkingMachine> = getNearbyEntities(start)
+
+        var nearestHitEntity: TwerkingMachine? = null
+        var nearestDistanceSq = Double.MAX_VALUE
+
+        for (entity in entities) {
+            val location = entity.fakePlayer.location.clone()
+            val center = location.clone().add(location.direction)
+            val boundingBox: BoundingBox = BoundingBox.of(center.clone(), center.clone()).expand(raySize)
+            val hitResult = boundingBox.rayTrace(startPos, direction, maxDistance)
+            if (hitResult != null) {
+                val distanceSq = startPos.distanceSquared(hitResult.hitPosition)
+                if (distanceSq < nearestDistanceSq) {
+                    nearestHitEntity = entity
+                    nearestDistanceSq = distanceSq
+                }
+            }
+        }
+
+        return nearestHitEntity
+
+    }
+
+    fun removeNpc(twerkingMachine: TwerkingMachine) {
+        twerkingMachine.vehicle?.remove()
+        twerkingMachine.fakePlayer.remove()
+        NpcDataConfig.npcData -= twerkingMachine
     }
 }
