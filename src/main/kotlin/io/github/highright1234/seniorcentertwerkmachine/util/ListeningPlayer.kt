@@ -51,12 +51,10 @@ object ListeningPlayer {
 inline fun<reified T: Event> Player.listenAsync(withCancel: Boolean = true): Deferred<T> {
     val completableDeferred = CompletableDeferred<T>()
     ListeningPlayer.register(T::class.java, this) {
-        completableDeferred.complete(it)
-        if (withCancel) {
-            if (it is Cancellable) {
-                it.isCancelled = true
-            }
+        if (it is Cancellable && withCancel) {
+            it.isCancelled = true
         }
+        completableDeferred.complete(it)
     }
     return completableDeferred
 }

@@ -14,8 +14,9 @@ object NpcDataConfig {
     private lateinit var file: File
     fun load(file: File) {
         this.file = file
-        val config = YamlConfiguration.loadConfiguration(file)
-        println(config.getKeys(false).size)
+        YamlConfiguration.loadConfiguration(file)
+//        val config = YamlConfiguration.loadConfiguration(file)
+//        println(config.getKeys(false).size)
 //        config.getKeys(false).forEach {
 //            npcData += config[it] as TwerkingMachine
 //        }
