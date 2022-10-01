@@ -4,7 +4,6 @@ import io.github.highright1234.seniorcentertwerkmachine.SeniorCenterTwerkMachine
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import org.bukkit.entity.Player
-import org.bukkit.event.Cancellable
 import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -26,7 +25,7 @@ object ListeningPlayer {
             listener,
             EventPriority.NORMAL,
             { _, event ->
-                if (event is PlayerEvent && event.player == player) {
+                if (event !is PlayerEvent || event.player == player) {
                     @Suppress("UNCHECKED_CAST")
                     runCatching {
                         code(event as T)
@@ -48,12 +47,9 @@ object ListeningPlayer {
 }
 
 // withCancel 있는 이유는 Mc-coroutine 기술문제
-inline fun<reified T: Event> Player.listenAsync(withCancel: Boolean = true): Deferred<T> {
+inline fun<reified T: Event> Player.listenAsync(): Deferred<T> {
     val completableDeferred = CompletableDeferred<T>()
     ListeningPlayer.register(T::class.java, this) {
-        if (it is Cancellable && withCancel) {
-            it.isCancelled = true
-        }
         completableDeferred.complete(it)
     }
     return completableDeferred

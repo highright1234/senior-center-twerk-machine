@@ -72,9 +72,11 @@ object EditInvfx {
                     job.cancel()
                     player.sendMessage(text("Timed out").color(NamedTextColor.RED))
                 }
-                val chatEvent = player.listenAsync<AsyncChatEvent>().await()
-                chatEvent.isCancelled = true
-                val newName = chatEvent.message().string
+                val newName = withContext(plugin.asyncDispatcher) {
+                    player.listenAsync<AsyncChatEvent>().await()
+                        .apply { isCancelled = true }
+                        .message().string
+                }
                 npc.remove()
                 npc.clone(newName = newName)
                 player.sendMessage(
@@ -115,9 +117,12 @@ object EditInvfx {
                     job.cancel()
                     player.sendMessage(text("Timed out").color(NamedTextColor.RED))
                 }
-                val chatEvent = player.listenAsync<AsyncChatEvent>().await()
-                chatEvent.isCancelled = true
-                val newSkinOwnerName = chatEvent.message().string
+                val newSkinOwnerName = withContext(plugin.asyncDispatcher) {
+                    player.listenAsync<AsyncChatEvent>().await()
+                        .apply { isCancelled = true }
+                        .message().string
+                }
+
                 val skinProfile = withContext(plugin.asyncDispatcher) {
                     MojangAPI.fetchProfile(newSkinOwnerName)
                         ?.let { MojangAPI.fetchSkinProfile(it.uuid()) }
